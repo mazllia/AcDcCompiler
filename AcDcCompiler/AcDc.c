@@ -169,16 +169,54 @@ Declarations *parseDeclarations( FILE *source )
 			decl = parseDeclaration(source, token);
 			decls = parseDeclarations(source);
 			return makeDeclarationTree( decl, decls );
+		/**
+		 Right Values of declaration.
+		 */
         case PrintOp:
         case Alphabet:
 			ungetc(token.tok[0], source);
 			return NULL;
+		/**
+		 Input file only have declaration, 
+		 so the declarations parser reaches EOF.
+		 */
         case EOFsymbol:
 			return NULL;
         default:
 			printf("Syntax Error: Expect declarations %s\n", token.tok);
 			exit(1);
     }
+}
+
+/**
+ Optimization for constant operation.
+ @param[in,out] node Modify an expression and make it a constant valueType
+ */
+// Need to add to header file
+// Not completed
+void *parseExpressionByMergingConstantChildren( Expression *node )
+{
+	node->leftOperand = node->rightOperand = NULL;
+	
+	if (node->leftOperand->v.type == node->rightOperand->v.type) {
+		// If type the same
+		switch (node->v.val) {
+			case <#constant#>:
+				<#statements#>
+				break;
+				
+			default:
+				break;
+		}
+		node->v.type = node->leftOperand->v.type;
+	} else {
+		// If type different
+		
+	}
+	
+	free(node->leftOperand);
+	free(node->rightOperand);
+	node->leftOperand = node->rightOperand = NULL;
 }
 
 Expression *parseValue( FILE *source )
@@ -207,11 +245,37 @@ Expression *parseValue( FILE *source )
 	
     return value;
 }
+/**
+ Determine which type of subtree
+ @return SubtreeValueTypeCondition specifying which 
+ */
+// Need to add to header file
+// Not completed
+SubtreeValueTypeCondition parseAcquireSubtreesValueType( Expression *expr )
+{
+	SubtreeValueTypeCondition result;
+	
+	if (expr->v.type == IntConst) {
+		return LeftIntRightInt;
+	} else if (expr->v.type == IntConst && expr->v.type == FloatConst) {
+		return LeftIntRightFloat;
+	} else {
+		printf("parseAcquireSubtreesValueType error\n");
+		exit(1);
+	}
+}
+
+inline bool isExpressionConstant( Expression *node )
+{
+	return node->v.type == IntConst || node->v.type == FloatConst;
+}
 
 Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 {
     Token token = scanner(source);
     Expression *expr;
+	
+	bool isLeftChildConstant, isRightChildConstant;
 	
     switch(token.type){
         case PlusOp:
@@ -220,6 +284,12 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 			(expr->v).val.op = Plus;
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseValue(source);
+			// Constant optimization
+			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
+			isRightChildConstant = isExpressionConstant(expr->rightOperand);
+			if (isLeftChildConstant && isRightChildConstant) {
+				parseExpressionByMergingConstantChildren(expr);
+			}
 			return parseExpressionTail(source, expr);
         case MinusOp:
 			expr = (Expression *)malloc( sizeof(Expression) );
@@ -227,6 +297,12 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 			(expr->v).val.op = Minus;
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseValue(source);
+			// Constant optimization
+			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
+			isRightChildConstant = isExpressionConstant(expr->rightOperand);
+			if (isLeftChildConstant && isRightChildConstant) {
+				parseExpressionByMergingConstantChildren(expr);
+			}
 			return parseExpressionTail(source, expr);
         case Alphabet:
         case PrintOp:
@@ -240,6 +316,7 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
     }
 }
 
+// Need to be modified from above function
 Expression *parseExpression( FILE *source, Expression *lvalue )
 {
     Token token = scanner(source);

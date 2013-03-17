@@ -20,7 +20,6 @@ typedef enum StmtType { Print, Assignment } StmtType;
 typedef enum ValueType { Identifier, IntConst, FloatConst, PlusNode, MinusNode, MulNode, DivNode, IntToFloatConvertNode } ValueType;
 typedef enum Operation { Plus, Minus, Mul, Div, Assign, IntToFloatConvert } Operation;
 
-
 /*----------------------------------------------------------------------------------------
    All structures to facilitate the processes of 
    scanning, parsing, AST, type-checking, building the symbol table, and code generation.
@@ -32,6 +31,12 @@ typedef struct Token{
     TokenType type;
     char tok[1025];
 }Token;
+
+/* Subtrees (2 children) ValueType condition for constant optimization */
+typedef struct SubtreeValueTypeCondition{
+	ValueType leftValueType;
+	ValueType rightValueType;
+} SubtreeValueTypeCondition;
 
 /*-------- The following are nodes of the AST. --------*/
 
@@ -125,9 +130,12 @@ Program parser( FILE *source );
  *****************************/
 Declaration parseDeclaration( FILE *source, Token token );
 Declarations *parseDeclarations( FILE *source );
+
+inline bool isExpressionConstant( Expression *node );
 Expression *parseValue( FILE *source );
 Expression *parseExpressionTail( FILE *source, Expression *lvalue );
 Expression *parseExpression( FILE *source, Expression *lvalue );
+
 Statement parseStatement( FILE *source, Token token );
 Statements *parseStatements( FILE * source );
 /******************************

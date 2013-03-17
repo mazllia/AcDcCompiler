@@ -26,7 +26,7 @@
 
 /* Begin PBXFileReference section */
 		4DC95AB316F579E500EA5979 /* AcDcCompiler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = AcDcCompiler; sourceTree = BUILT_PRODUCTS_DIR; };
-		4DC95AB616F579E500EA5979 /* AcDc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AcDc.c; sourceTree = "<group>"; };
+		4DC95AB616F579E500EA5979 /* AcDc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AcDc.c; sourceTree = "<group>"; tabWidth = 4; };
 		4DC95AB816F579E500EA5979 /* AcDcCompiler.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = AcDcCompiler.1; sourceTree = "<group>"; };
 		4DC95ABF16F57A7000EA5979 /* header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = header.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
