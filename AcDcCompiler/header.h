@@ -16,7 +16,7 @@
 --------------------------------------------------------------------------------------------------------------------------------------------*/
 
 typedef enum TokenType { FloatDeclaration, IntegerDeclaration, PrintOp, AssignmentOp, PlusOp, MinusOp,
-             MulOp, DivOp, Alphabet, IntValue, FloatValue, EOFsymbol } TokenType;
+	MulOp, DivOp, Alphabet, IntValue, FloatValue, EOFsymbol } TokenType;
 typedef enum DataType { Int, Float, Notype }DataType;
 typedef enum StmtType { Print, Assignment } StmtType;
 typedef enum ValueType { Identifier, IntConst, FloatConst, PlusNode, MinusNode, MulNode, DivNode, IntToFloatConvertNode } ValueType;
@@ -34,7 +34,7 @@ typedef struct Token{
     char tok[1025];
 }Token;
 
-/*-------- The following are nodes of the AST. --------*/
+/*** The following are nodes of the AST. ***/
 
 /* For decl production or say one declaration statement */
 typedef struct Declaration{
@@ -42,16 +42,17 @@ typedef struct Declaration{
     char name;
 }Declaration;
 
-/* 
-    For decls production or say all declarations. (
-	You can view it as the subtree for decls in AST,
-	or just view it as the linked list that stores 
-	all declarations. ) 
-*/
+/*
+ For decls production or say all declarations. (
+ You can view it as the subtree for decls in AST,
+ or just view it as the linked list that stores
+ all declarations. )
+ */
 typedef struct Declarations{
     Declaration first;
     struct Declarations *rest;
 }Declarations;
+
 
 /* For the nodes of the expression on the right hand side of one assignment statement */
 typedef struct Value{
@@ -65,11 +66,11 @@ typedef struct Value{
 }Value;
 
 
-/* 
-   The data structure of the expression tree.
-   Recall how to deal with expression by tree 
-   in data structure course.   
-*/
+/*
+ The data structure of the expression tree.
+ Recall how to deal with expression by tree
+ in data structure course.
+ */
 typedef struct Expression{
     Value v;
     struct Expression *leftOperand;
@@ -113,17 +114,10 @@ typedef struct SymbolTable{
 } SymbolTable;
 
 
-Token scanner( FILE *source );
-/******************************
- Scanning
- *****************************/
 Token getNumericToken( FILE *source, char c );
-
-
-Program parser( FILE *source );
-/******************************
- Parsing
- *****************************/
+Token scanner( FILE *source );
+Declaration makeDeclarationNode( Token declare_type, Token identifier );
+Declarations *makeDeclarationTree( Declaration decl, Declarations *decls );
 Declaration parseDeclaration( FILE *source, Token token );
 Declarations *parseDeclarations( FILE *source );
 
@@ -142,38 +136,22 @@ Declarations *makeDeclarationTree( Declaration decl, Declarations *decls );
 Statement makeAssignmentNode( char id, Expression *v, Expression *expr_tail );
 Statement makePrintNode( char id );
 Statements *makeStatementTree( Statement stmt, Statements *stmts );
-
-
-SymbolTable build( Program program );
-/******************************
- Building Symbol Table
- *****************************/
+Statement parseStatement( FILE *source, Token token );
+Statements *parseStatements( FILE * source );
+Program parser( FILE *source );
 void InitializeTable( SymbolTable *table );
 void add_table( SymbolTable *table, char c, DataType t );
-
-
-void check( Program *program, SymbolTable * table);
-/******************************
- Checking types
- *****************************/
+SymbolTable build( Program program );
 void convertType( Expression * old, DataType type );
 DataType generalize( Expression *left, Expression *right );
 DataType lookup_table( SymbolTable *table, char c );
 void checkexpression( Expression * expr, SymbolTable * table );
 void checkstmt( Statement *stmt, SymbolTable * table );
-
-
-void gencode( Program prog, FILE * target );
-/******************************
- Generating codes
- *****************************/
+void check( Program *program, SymbolTable * table);
 void fprint_op( FILE *target, ValueType op );
 void fprint_expr( FILE *target, Expression *expr );
+void gencode( Program prog, FILE * target );
 
-
-/******************************
- Debugging in code
- *****************************/
 void print_expr( Expression *expr );
 void test_parser( FILE *source );
 
