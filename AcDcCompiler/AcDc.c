@@ -189,71 +189,64 @@ Declarations *parseDeclarations( FILE *source )
 }
 
 /**
- Optimization for constant operation.
+ Private API for parseExpressionByMergingConstantChildren() calculating (a op b).
+ */
+inline long double typeInsensitiveOperation( long double a, long double b, DataType op )
+{
+	switch (op) {
+		case PlusNode:
+			return a + b;
+			break;
+		case MinusNode:
+			return a - b;
+			break;
+		case MulNode:
+			return a * b;
+			break;
+		case DivNode:
+			return a / b;
+			break;
+		default:
+			printf ("ERROR Msg: typeUnsensitiveOperation() operation error.\n");
+			exit(1);
+			break;
+	}
+}
+
+/**
+ Private API doing optimization for constant operation.
  @param[in,out] node Modify an expression and make it a constant valueType
  */
-// Need to add to header file
-// Not completed
 void *parseExpressionByMergingConstantChildren( Expression *node )
 {
-	ValueType resultType;
 	ValueType leftType = node->leftOperand->v.type;
 	ValueType rightType = node->rightOperand->v.type;
-	float resultFloat;
-	int resultInt;
 	
-	// Decide the resultType
-	if (leftType == rightType) { resultType = leftType; }
-	else { resultType = FloatConst; }
-	
-	// Do the folding
-	if (resultType==IntConst) {
-		resultInt = node->leftOperand->v.ivalue;
-		switch (node->v.type) {
-			case PlusNode:
-				resultInt += node->rightOperand->v.ivalue;
-				break;
-			case MinusNode:
-				resultInt -= node->rightOperand->v.ivalue;
-				break;
-			case MulNode:
-				resultInt *= node->rightOperand->v.ivalue;
-				break;
-			case DivNode:
-				resultInt /= node->rightOperand->v.ivalue;
-				break;
-			default:
-				printf ("ERROR Code: i1xEn21e\n");
-				exit(1);
-				break;
-		}
-		node->v.val.ivalue = resultInt;
-	} else if (resultType==FloatConst) {
-		resultFloat = node->leftOperand->v.fvalue;
-		switch (node->v.type) {
-			case PlusNode:
-				resultFloat += node->rightOperand->v.fvalue;
-				break;
-			case MinusNode:
-				resultFloat -= node->rightOperand->v.fvalue;
-				break;
-			case MulNode:
-				resultFloat *= node->rightOperand->v.fvalue;
-				break;
-			case DivNode:
-				resultFloat /= node->rightOperand->v.fvalue;
-				break;
-			default:
-				printf ("ERROR Code: 1Pip29n3a\n");
-				exit(1);
-				break;
-		}
-		node->v.val.fvalue = resultFloat;
+	// Decide DataType and folds
+	if (leftType == IntConst && rightType == IntConst) {
+		node->v.val.ivalue = (int)typeInsensitiveOperation(node->leftOperand->v.ivalue,
+														   node->rightOperand->v.ivalue,
+														   node->v.type);
+		node->v.type = IntConst;
+	} else if (leftType == FloatConst && rightType == FloatConst) {
+		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.fvalue,
+															 node->rightOperand->v.fvalue,
+															 node->v.type);
+		node->v.type = FloatConst;
+	} else if (leftType == IntConst && rightType == FloatConst) {
+		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.ivalue,
+															 node->rightOperand->v.fvalue,
+															 node->v.type);
+		node->v.type = FloatConst;
+	} else if (leftType == FloatConst && rightType == IntConst) {
+		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.fvalue,
+															 node->rightOperand->v.ivalue,
+															 node->v.type);
+		node->v.type = FloatConst;
 	} else {
-		printf ("ERROR Code: Jiemj19z\n");
+		printf ("ERROR Msg: parseExpressionByMergingConstantChildren() Subtree type error.\n");
 		exit(1);
 	}
-	node->v.type = resultType;
 	
 	// Handle the children pointer
 	free(node->leftOperand);
@@ -352,6 +345,12 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
 			(expr->v).val.op = Plus;
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseValue(source);
+			// Constant optimization
+			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
+			isRightChildConstant = isExpressionConstant(expr->rightOperand);
+			if (isLeftChildConstant && isRightChildConstant) {
+				parseExpressionByMergingConstantChildren(expr);
+			}
 			return parseExpressionTail(source, expr);
         case MinusOp:
 			expr = (Expression *)malloc( sizeof(Expression) );
@@ -359,6 +358,12 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
 			(expr->v).val.op = Minus;
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseValue(source);
+			// Constant optimization
+			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
+			isRightChildConstant = isExpressionConstant(expr->rightOperand);
+			if (isLeftChildConstant && isRightChildConstant) {
+				parseExpressionByMergingConstantChildren(expr);
+			}
 			return parseExpressionTail(source, expr);
         case Alphabet:
         case PrintOp:
