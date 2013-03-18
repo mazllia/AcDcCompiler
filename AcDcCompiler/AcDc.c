@@ -223,7 +223,6 @@ void parseExpressionByMergingConstantChildren( Expression *node )
 	ValueType leftType = node->leftOperand->v.type;
 	ValueType rightType = node->rightOperand->v.type;
 	
-	printf("Called\n");
 	
 	// Decide DataType and folds
 	if (leftType == IntConst && rightType == IntConst) {
@@ -268,7 +267,7 @@ Expression *parseRest( FILE *source, Expression *lvalue )
 	Token token = scanner(source);
     Expression *expr;
 	
-//	bool isLeftChildConstant, isRightChildConstant;
+	bool isLeftChildConstant, isRightChildConstant;
 	
     switch(token.type){
         case MulOp:
@@ -278,11 +277,11 @@ Expression *parseRest( FILE *source, Expression *lvalue )
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseTerm(source);
 			// Constant optimization
-//			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
-//			isRightChildConstant = isExpressionConstant(expr->rightOperand);
-//			if (isLeftChildConstant && isRightChildConstant) {
-//				parseExpressionByMergingConstantChildren(expr);
-//			}
+			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
+			isRightChildConstant = isExpressionConstant(expr->rightOperand);
+			if (isLeftChildConstant && isRightChildConstant) {
+				parseExpressionByMergingConstantChildren(expr);
+			}
 			return parseRest(source, expr);
         case DivOp:
 			expr = (Expression *)malloc( sizeof(Expression) );
@@ -290,11 +289,11 @@ Expression *parseRest( FILE *source, Expression *lvalue )
 			(expr->v).val.op = Div;
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseTerm(source);
-//			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
-//			isRightChildConstant = isExpressionConstant(expr->rightOperand);
-//			if (isLeftChildConstant && isRightChildConstant) {
-//				parseExpressionByMergingConstantChildren(expr);
-//			}
+			isLeftChildConstant  = isExpressionConstant(expr->leftOperand);
+			isRightChildConstant = isExpressionConstant(expr->rightOperand);
+			if (isLeftChildConstant && isRightChildConstant) {
+				parseExpressionByMergingConstantChildren(expr);
+			}
 			return parseRest(source, expr);
         case Alphabet:
         case PrintOp:
