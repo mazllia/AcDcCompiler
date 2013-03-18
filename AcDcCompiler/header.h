@@ -32,12 +32,6 @@ typedef struct Token{
     char tok[1025];
 }Token;
 
-/* Subtrees (2 children) ValueType condition for constant optimization */
-typedef struct SubtreeValueTypeCondition{
-	ValueType leftValueType;
-	ValueType rightValueType;
-} SubtreeValueTypeCondition;
-
 /*-------- The following are nodes of the AST. --------*/
 
 /* For decl production or say one declaration statement */

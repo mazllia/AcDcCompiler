@@ -196,24 +196,66 @@ Declarations *parseDeclarations( FILE *source )
 // Not completed
 void *parseExpressionByMergingConstantChildren( Expression *node )
 {
-	node->leftOperand = node->rightOperand = NULL;
+	ValueType resultType;
+	ValueType leftType = node->leftOperand->v.type;
+	ValueType rightType = node->rightOperand->v.type;
+	float resultFloat;
+	int resultInt;
 	
-	if (node->leftOperand->v.type == node->rightOperand->v.type) {
-		// If type the same
-		switch (node->v.val) {
-			case <#constant#>:
-				<#statements#>
+	// Decide the resultType
+	if (leftType == rightType) { resultType = leftType; }
+	else { resultType = FloatConst; }
+	
+	// Do the folding
+	if (resultType==IntConst) {
+		resultInt = node->leftOperand->v.ivalue;
+		switch (node->v.type) {
+			case PlusNode:
+				resultInt += node->rightOperand->v.ivalue;
 				break;
-				
+			case MinusNode:
+				resultInt -= node->rightOperand->v.ivalue;
+				break;
+			case MulNode:
+				resultInt *= node->rightOperand->v.ivalue;
+				break;
+			case DivNode:
+				resultInt /= node->rightOperand->v.ivalue;
+				break;
 			default:
+				printf ("ERROR Code: i1xEn21e\n");
+				exit(1);
 				break;
 		}
-		node->v.type = node->leftOperand->v.type;
+		node->v.val.ivalue = resultInt;
+	} else if (resultType==FloatConst) {
+		resultFloat = node->leftOperand->v.fvalue;
+		switch (node->v.type) {
+			case PlusNode:
+				resultFloat += node->rightOperand->v.fvalue;
+				break;
+			case MinusNode:
+				resultFloat -= node->rightOperand->v.fvalue;
+				break;
+			case MulNode:
+				resultFloat *= node->rightOperand->v.fvalue;
+				break;
+			case DivNode:
+				resultFloat /= node->rightOperand->v.fvalue;
+				break;
+			default:
+				printf ("ERROR Code: 1Pip29n3a\n");
+				exit(1);
+				break;
+		}
+		node->v.val.fvalue = resultFloat;
 	} else {
-		// If type different
-		
+		printf ("ERROR Code: Jiemj19z\n");
+		exit(1);
 	}
+	node->v.type = resultType;
 	
+	// Handle the children pointer
 	free(node->leftOperand);
 	free(node->rightOperand);
 	node->leftOperand = node->rightOperand = NULL;
@@ -244,25 +286,6 @@ Expression *parseValue( FILE *source )
     }
 	
     return value;
-}
-/**
- Determine which type of subtree
- @return SubtreeValueTypeCondition specifying which 
- */
-// Need to add to header file
-// Not completed
-SubtreeValueTypeCondition parseAcquireSubtreesValueType( Expression *expr )
-{
-	SubtreeValueTypeCondition result;
-	
-	if (expr->v.type == IntConst) {
-		return LeftIntRightInt;
-	} else if (expr->v.type == IntConst && expr->v.type == FloatConst) {
-		return LeftIntRightFloat;
-	} else {
-		printf("parseAcquireSubtreesValueType error\n");
-		exit(1);
-	}
 }
 
 inline bool isExpressionConstant( Expression *node )
