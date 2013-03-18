@@ -1,6 +1,8 @@
 #ifndef HEADER_H_INCLUDED
 #define HEADER_H_INCLUDED
 
+#include <stdbool.h>
+
 /*--------------------------------------------------------------------------------------------------------------------------------------------
     All enumeration literals
        TokenType : Specify the type of the token scanner returns
@@ -125,7 +127,7 @@ Program parser( FILE *source );
 Declaration parseDeclaration( FILE *source, Token token );
 Declarations *parseDeclarations( FILE *source );
 
-inline bool isExpressionConstant( Expression *node );
+bool isExpressionConstant( Expression *node );
 Expression *parseValue( FILE *source );
 Expression *parseExpressionTail( FILE *source, Expression *lvalue );
 Expression *parseExpression( FILE *source, Expression *lvalue );

@@ -191,7 +191,7 @@ Declarations *parseDeclarations( FILE *source )
 /**
  Private API for parseExpressionByMergingConstantChildren() calculating (a op b).
  */
-inline long double typeInsensitiveOperation( long double a, long double b, DataType op )
+inline long double typeInsensitiveOperation( long double a, long double b, ValueType op )
 {
 	switch (op) {
 		case PlusNode:
@@ -217,30 +217,30 @@ inline long double typeInsensitiveOperation( long double a, long double b, DataT
  Private API doing optimization for constant operation.
  @param[in,out] node Modify an expression and make it a constant valueType
  */
-void *parseExpressionByMergingConstantChildren( Expression *node )
+void parseExpressionByMergingConstantChildren( Expression *node )
 {
 	ValueType leftType = node->leftOperand->v.type;
 	ValueType rightType = node->rightOperand->v.type;
 	
 	// Decide DataType and folds
 	if (leftType == IntConst && rightType == IntConst) {
-		node->v.val.ivalue = (int)typeInsensitiveOperation(node->leftOperand->v.ivalue,
-														   node->rightOperand->v.ivalue,
+		node->v.val.ivalue = (int)typeInsensitiveOperation(node->leftOperand->v.val.ivalue,
+														   node->rightOperand->v.val.ivalue,
 														   node->v.type);
 		node->v.type = IntConst;
 	} else if (leftType == FloatConst && rightType == FloatConst) {
-		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.fvalue,
-															 node->rightOperand->v.fvalue,
+		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.val.fvalue,
+															 node->rightOperand->v.val.fvalue,
 															 node->v.type);
 		node->v.type = FloatConst;
 	} else if (leftType == IntConst && rightType == FloatConst) {
-		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.ivalue,
-															 node->rightOperand->v.fvalue,
+		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.val.ivalue,
+															 node->rightOperand->v.val.fvalue,
 															 node->v.type);
 		node->v.type = FloatConst;
 	} else if (leftType == FloatConst && rightType == IntConst) {
-		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.fvalue,
-															 node->rightOperand->v.ivalue,
+		node->v.val.fvalue = (float)typeInsensitiveOperation(node->leftOperand->v.val.fvalue,
+															 node->rightOperand->v.val.ivalue,
 															 node->v.type);
 		node->v.type = FloatConst;
 	} else {
@@ -281,7 +281,7 @@ Expression *parseValue( FILE *source )
     return value;
 }
 
-inline bool isExpressionConstant( Expression *node )
+bool isExpressionConstant( Expression *node )
 {
 	return node->v.type == IntConst || node->v.type == FloatConst;
 }
@@ -337,6 +337,8 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
 {
     Token token = scanner(source);
     Expression *expr;
+	
+	bool isLeftChildConstant, isRightChildConstant;
 	
     switch(token.type){
         case PlusOp:
