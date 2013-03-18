@@ -1,30 +1,30 @@
 #ifndef HEADER_H_INCLUDED
 #define HEADER_H_INCLUDED
 
-/*--------------------------------------------------------------------------------------------------------------------------------------------
-    All enumeration literals
-       TokenType : Specify the type of the token scanner returns
-	   DataType  : The data type of the declared variable
-	   StmtType  : Indicate one statement in AcDc program is print or assignment statement.
-	   ValueType : The node types of the expression tree that represents the expression on the right hand side of the assignment statement.
-	               Identifier, IntConst, FloatConst must be the leaf nodes ex: a, b, c , 1.5 , 3.
-				   PlusNode, MinusNode, MulNode, DivNode are the operations in AcDc. They must be the internal nodes.
-                   Note that IntToFloatConvertNode to represent the type coercion may appear after finishing type checking. 			  
-	   Operation : Specify all arithematic expression, including +, - , *, / and type coercion.
---------------------------------------------------------------------------------------------------------------------------------------------*/
+/******************************************************************************************************************************************
+ All enumeration literals
+ TokenType : Specify the type of the token scanner returns
+ DataType  : The data type of the declared variable
+ StmtType  : Indicate one statement in AcDc program is print or assignment statement.
+ ValueType : The node types of the expression tree that represents the expression on the right hand side of the assignment statement.
+ Identifier, IntConst, FloatConst must be the leaf nodes ex: a, b, c , 1.5 , 3.
+ PlusNode, MinusNode, MulNode, DivNode are the operations in AcDc. They must be the internal nodes.
+ Note that IntToFloatConvertNode to represent the type coercion may appear after finishing type checking.
+ Operation : Specify all arithematic expression, including +, - , *, / and type coercion.
+ *******************************************************************************************************************************************/
 
 typedef enum TokenType { FloatDeclaration, IntegerDeclaration, PrintOp, AssignmentOp, PlusOp, MinusOp,
-             MulOp, DivOp, Alphabet, IntValue, FloatValue, EOFsymbol } TokenType;
+	MulOp, DivOp, Alphabet, IntValue, FloatValue, EOFsymbol } TokenType;
 typedef enum DataType { Int, Float, Notype }DataType;
 typedef enum StmtType { Print, Assignment } StmtType;
 typedef enum ValueType { Identifier, IntConst, FloatConst, PlusNode, MinusNode, MulNode, DivNode, IntToFloatConvertNode } ValueType;
 typedef enum Operation { Plus, Minus, Mul, Div, Assign, IntToFloatConvert } Operation;
 
 
-/*----------------------------------------------------------------------------------------
-   All structures to facilitate the processes of 
-   scanning, parsing, AST, type-checking, building the symbol table, and code generation.
-----------------------------------------------------------------------------------------*/
+/****************************************************************************************
+ All structures to facilitate the processes of
+ scanning, parsing, AST, type-checking, building the symbol table, and code generation.
+ *****************************************************************************************/
 
 
 /* For scanner */
@@ -33,7 +33,7 @@ typedef struct Token{
     char tok[1025];
 }Token;
 
-/*-------- The following are nodes of the AST. --------*/
+/*** The following are nodes of the AST. ***/
 
 /* For decl production or say one declaration statement */
 typedef struct Declaration{
@@ -41,16 +41,17 @@ typedef struct Declaration{
     char name;
 }Declaration;
 
-/* 
-    For decls production or say all declarations. (
-	You can view it as the subtree for decls in AST,
-	or just view it as the linked list that stores 
-	all declarations. ) 
-*/
+/*
+ For decls production or say all declarations. (
+ You can view it as the subtree for decls in AST,
+ or just view it as the linked list that stores
+ all declarations. )
+ */
 typedef struct Declarations{
     Declaration first;
     struct Declarations *rest;
 }Declarations;
+
 
 /* For the nodes of the expression on the right hand side of one assignment statement */
 typedef struct Value{
@@ -64,11 +65,11 @@ typedef struct Value{
 }Value;
 
 
-/* 
-   The data structure of the expression tree.
-   Recall how to deal with expression by tree 
-   in data structure course.   
-*/
+/*
+ The data structure of the expression tree.
+ Recall how to deal with expression by tree
+ in data structure course.
+ */
 typedef struct Expression{
     Value v;
     struct Expression *leftOperand;
@@ -112,64 +113,36 @@ typedef struct SymbolTable{
 } SymbolTable;
 
 
-Token scanner( FILE *source );
-/******************************
- Scanning
- *****************************/
 Token getNumericToken( FILE *source, char c );
-
-
-Program parser( FILE *source );
-/******************************
- Parsing
- *****************************/
-Declaration parseDeclaration( FILE *source, Token token );
-Declarations *parseDeclarations( FILE *source );
-Expression *parseValue( FILE *source );
-Expression *parseExpressionTail( FILE *source, Expression *lvalue );
-Expression *parseExpression( FILE *source, Expression *lvalue );
-Statement parseStatement( FILE *source, Token token );
-Statements *parseStatements( FILE * source );
-/******************************
- Building Abstract Syntax Tree (AST)
- *****************************/
+Token scanner( FILE *source );
 Declaration makeDeclarationNode( Token declare_type, Token identifier );
 Declarations *makeDeclarationTree( Declaration decl, Declarations *decls );
+Declaration parseDeclaration( FILE *source, Token token );
+Declarations *parseDeclarations( FILE *source );
+Expression *parseRest( FILE *source,Expression *lvalue );//new
+Expression *parseValue( FILE *source );//modified
+Expression *parseTerm( FILE *source );//new
+Expression *parseExpressionTail( FILE *source, Expression *lvalue );
+Expression *parseExpression( FILE *source, Expression *lvalue );
 Statement makeAssignmentNode( char id, Expression *v, Expression *expr_tail );
 Statement makePrintNode( char id );
 Statements *makeStatementTree( Statement stmt, Statements *stmts );
-
-
-SymbolTable build( Program program );
-/******************************
- Building Symbol Table
- *****************************/
+Statement parseStatement( FILE *source, Token token );
+Statements *parseStatements( FILE * source );
+Program parser( FILE *source );
 void InitializeTable( SymbolTable *table );
 void add_table( SymbolTable *table, char c, DataType t );
-
-
-void check( Program *program, SymbolTable * table);
-/******************************
- Checking types
- *****************************/
+SymbolTable build( Program program );
 void convertType( Expression * old, DataType type );
 DataType generalize( Expression *left, Expression *right );
 DataType lookup_table( SymbolTable *table, char c );
 void checkexpression( Expression * expr, SymbolTable * table );
 void checkstmt( Statement *stmt, SymbolTable * table );
-
-
-void gencode( Program prog, FILE * target );
-/******************************
- Generating codes
- *****************************/
+void check( Program *program, SymbolTable * table);
 void fprint_op( FILE *target, ValueType op );
 void fprint_expr( FILE *target, Expression *expr );
+void gencode( Program prog, FILE * target );
 
-
-/******************************
- Debugging in code
- *****************************/
 void print_expr( Expression *expr );
 void test_parser( FILE *source );
 

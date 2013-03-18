@@ -4,6 +4,7 @@
 #include <string.h>
 #include "header.h"
 
+
 int main( int argc, char *argv[] )
 {
     FILE *source, *target;
@@ -22,14 +23,10 @@ int main( int argc, char *argv[] )
 			exit(2);
         }
         else{
-			/// Pass the FILE* to @see parser() to get the @see struct Program
 			program = parser(source);
 			fclose(source);
-			/// Pass the struct Program to @see build() to get @see struct SymbolTable
 			symtab = build(program);
-			/// Pass the @see struct Program and @see struct SymbolTable to check type correction
 			check(&program, &symtab);
-			/// Pass the @see struct Program to output
 			gencode(program, target);
         }
     }
@@ -183,6 +180,46 @@ Declarations *parseDeclarations( FILE *source )
 
 Expression *parseValue( FILE *source )
 {
+    Expression *value = parseTerm(source);
+    return parseRest(source,value);
+}
+
+Expression *parseRest( FILE *source, Expression *lvalue )
+{
+	Token token = scanner(source);
+    Expression *expr;
+	
+    switch(token.type){
+        case MulOp:
+			expr = (Expression *)malloc( sizeof(Expression) );
+			(expr->v).type = MulNode;
+			(expr->v).val.op = Mul;
+			expr->leftOperand = lvalue;
+			expr->rightOperand = parseTerm(source);
+			return parseRest(source, expr);
+        case DivOp:
+			expr = (Expression *)malloc( sizeof(Expression) );
+			(expr->v).type = DivNode;
+			(expr->v).val.op = Div;
+			expr->leftOperand = lvalue;
+			expr->rightOperand = parseTerm(source);
+			return parseRest(source, expr);
+        case Alphabet:
+        case PrintOp:
+        case PlusOp:
+        case MinusOp:
+			ungetc(token.tok[0], source);  //backtracking
+			return lvalue;;
+        case EOFsymbol:
+			return lvalue;
+        default:
+			printf("Syntax Error: Expect a numeric value or an identifier %s\n", token.tok);
+			exit(1);
+    }
+}
+
+Expression *parseTerm( FILE *source )
+{
     Token token = scanner(source);
     Expression *value = (Expression *)malloc( sizeof(Expression) );
     value->leftOperand = value->rightOperand = NULL;
@@ -208,6 +245,8 @@ Expression *parseValue( FILE *source )
     return value;
 }
 
+
+
 Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 {
     Token token = scanner(source);
@@ -228,6 +267,9 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseValue(source);
 			return parseExpressionTail(source, expr);
+        case MulOp:
+        case DivOp:
+			return parseValue(source);
         case Alphabet:
         case PrintOp:
 			ungetc(token.tok[0], source);
@@ -260,6 +302,9 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
 			expr->leftOperand = lvalue;
 			expr->rightOperand = parseValue(source);
 			return parseExpressionTail(source, expr);
+        case MulOp:
+        case DivOp:
+			return parseValue(source);
         case Alphabet:
         case PrintOp:
 			ungetc(token.tok[0], source);
@@ -564,6 +609,12 @@ void fprint_op( FILE *target, ValueType op )
 			break;
 		case PlusNode:
 			fprintf(target,"+\n");
+			break;
+		case MulNode:
+			fprintf(target,"*\n");
+			break;
+		case DivNode:
+			fprintf(target,"/\n");
 			break;
 		default:
 			fprintf(target,"Error in fprintf_op ValueType = %d\n",op);
